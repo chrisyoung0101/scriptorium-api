@@ -1,0 +1,407 @@
+build.gradle :
+
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.4.1'
+    id 'io.spring.dependency-management' version '1.1.7'
+    id 'org.asciidoctor.jvm.convert' version '3.3.2'
+}
+
+group = 'com.example'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(23)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+ext {
+    set('snippetsDir', file("build/generated-snippets"))
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.3'
+    implementation 'org.projectlombok:lombok:1.18.30' // Lombok
+    implementation 'org.postgresql:postgresql:42.7.2'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
+    testImplementation 'org.springframework.security:spring-security-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    runtimeOnly 'org.postgresql:postgresql:42.7.2'
+    annotationProcessor 'org.projectlombok:lombok:1.18.30'
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+}
+
+tasks.named('test') {
+    outputs.dir snippetsDir
+    useJUnitPlatform()
+}
+
+tasks.named('asciidoctor') {
+    inputs.dir snippetsDir
+    dependsOn test
+}
+
+application.yaml :
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/scriptorium_db?preferQueryMode=extended
+    username: postgres
+    password: your_actual_password
+    driver-class-name: org.postgresql.Driver
+  security:
+    user:
+      name: admin
+      password: admin123
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+      # Commented out to avoid warnings with Hibernate 6+
+      # dialect: org.hibernate.dialect.PostgreSQLDialect
+
+server:
+  port: 8080
+
+logging:
+  level:
+    org.springframework.security: DEBUG
+
+
+ScriptoriumApiApplication :
+
+package com.example.scriptorium_api;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class ScriptoriumApiApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(ScriptoriumApiApplication.class, args);
+    }
+
+}
+
+
+DocumentController :
+
+package com.example.scriptorium_api.controller;
+
+import com.example.scriptorium_api.model.DocumentEntity;
+import com.example.scriptorium_api.service.DocumentService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/documents")
+public class DocumentController {
+
+    @Autowired
+    private DocumentService documentService;
+
+    @PostMapping
+    public DocumentEntity createDocument(@RequestBody DocumentEntity documentEntity) {
+        return documentService.saveDocument(documentEntity);
+    }
+
+    @GetMapping
+    public List<DocumentEntity> getAllDocuments() {
+        return documentService.getAllDocuments();
+    }
+
+    @GetMapping("/{id}")
+    public DocumentEntity getDocumentById(@PathVariable Long id) {
+        return documentService.getDocumentById(id);
+    }
+
+    @DeleteMapping("/{id}")
+    public void deleteDocument(@PathVariable Long id) {
+        documentService.deleteDocumentById(id);
+    }
+}
+
+
+
+GlobalExceptionHandler :
+
+package com.example.scriptorium_api.exception;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+
+@ControllerAdvice
+public class GlobalExceptionHandler {
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<String> handleResourceNotFound(ResourceNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<String> handleGeneralException(Exception ex) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred: " + ex.getMessage());
+    }
+}
+
+ResourceNotFoundException :
+
+package com.example.scriptorium_api.exception;
+
+public class ResourceNotFoundException extends RuntimeException {
+    public ResourceNotFoundException(String message) {
+        super(message);
+    }
+}
+
+
+DocumentEntity :
+package com.example.scriptorium_api.model;
+
+import jakarta.persistence.*;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+
+@Entity
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class DocumentEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false)
+    private String name;
+
+    @Column(nullable = false)
+    private String title;
+
+    @Lob
+    private String content;
+
+    private String version;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_id", referencedColumnName = "id")
+    private DocumentEntity parent;
+
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private Type type;
+
+    public enum Type {
+        FOLDER, FILE
+    }
+}
+
+
+
+
+DocumentRepository :
+
+package com.example.scriptorium_api.repository;
+
+
+import com.example.scriptorium_api.model.DocumentEntity;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface DocumentRepository extends JpaRepository<DocumentEntity, Long> {
+    // Add custom queries here if needed
+}
+
+
+DocumentService :
+
+package com.example.scriptorium_api.service;
+
+import com.example.scriptorium_api.exception.ResourceNotFoundException;
+import com.example.scriptorium_api.model.DocumentEntity;
+import com.example.scriptorium_api.repository.DocumentRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor // Generates a constructor for final fields
+public class DocumentService { // Class DocumentService is never used - why?
+
+    private final DocumentRepository documentRepository;
+
+    public List<DocumentEntity> getAllDocuments() {
+        return documentRepository.findAll();
+    }
+
+    public DocumentEntity getDocumentById(Long id) {
+        return documentRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Document not found with ID: " + id));
+    }
+
+    public DocumentEntity saveDocument(DocumentEntity documentEntity) {
+        return documentRepository.save(documentEntity);
+    }
+
+    public void deleteDocumentById(Long id) {
+        if (!documentRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Cannot delete. Document not found with ID: " + id);
+        }
+        documentRepository.deleteById(id);
+    }
+}
+
+ScriptoriumApiApplicationTests.java :
+package com.example.scriptorium_api;
+
+import com.example.scriptorium_api.model.DocumentEntity;
+import com.example.scriptorium_api.repository.DocumentRepository;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+@SpringBootTest
+@ActiveProfiles("test") // Use the 'test' profile for tests
+public class ScriptoriumApiApplicationTests {
+
+    @Autowired
+    private DocumentRepository documentRepository;
+
+    @BeforeEach
+    public void setUp() {
+        // Clean the database before each test
+        documentRepository.deleteAll();
+        System.out.println("Database cleaned. Record count: " + documentRepository.count());
+    }
+
+    @Test
+    public void testSaveAndFetchDocument() {
+        String uniqueName = "UniqueName_" + System.currentTimeMillis();
+
+        DocumentEntity document = DocumentEntity.builder()
+                .name(uniqueName)
+                .title("Test Title")
+                .content("Test Content")
+                .type(DocumentEntity.Type.FILE) // Explicitly set type
+                .build();
+
+        DocumentEntity savedDocument = documentRepository.save(document);
+
+        assertNotNull(savedDocument.getId(), "The saved document's ID should not be null.");
+        Optional<DocumentEntity> fetchedDocument = documentRepository.findById(savedDocument.getId());
+        assertTrue(fetchedDocument.isPresent(), "The document should be present in the database.");
+        assertEquals(uniqueName, fetchedDocument.get().getName(), "The name should match.");
+        assertEquals("Test Title", fetchedDocument.get().getTitle(), "The title should match.");
+        assertEquals("Test Content", fetchedDocument.get().getContent(), "The content should match.");
+        assertEquals(DocumentEntity.Type.FILE, fetchedDocument.get().getType(), "The type should match.");
+    }
+
+    @Test
+    public void testDuplicateNameThrowsException() {
+        String uniqueBaseName = "DuplicateName_" + System.currentTimeMillis();
+
+        DocumentEntity firstDocument = DocumentEntity.builder()
+                .name(uniqueBaseName)
+                .title("First Document")
+                .content("Content of the first document")
+                .type(DocumentEntity.Type.FILE) // Explicitly set type
+                .build();
+
+        DocumentEntity savedDocument = documentRepository.save(firstDocument);
+        assertNotNull(savedDocument.getId(), "The first document's ID should not be null.");
+
+        DocumentEntity secondDocument = DocumentEntity.builder()
+                .name(uniqueBaseName) // Same name
+                .title("Second Document")
+                .content("Content of the second document")
+                .type(DocumentEntity.Type.FILE) // Explicitly set type
+                .build();
+
+        assertThrows(
+                org.springframework.dao.DataIntegrityViolationException.class,
+                () -> documentRepository.save(secondDocument),
+                "Saving a document with a duplicate name should throw a DataIntegrityViolationException."
+        );
+    }
+
+    @Test
+    public void testSaveFolderAndFetchChildren() {
+        String parentFolderName = "ParentFolder_" + System.currentTimeMillis();
+
+        DocumentEntity parentFolder = DocumentEntity.builder()
+                .name(parentFolderName)
+                .title("Parent Folder")
+                .type(DocumentEntity.Type.FOLDER) // Create as FOLDER
+                .build();
+
+        DocumentEntity savedParentFolder = documentRepository.save(parentFolder);
+        assertNotNull(savedParentFolder.getId(), "The parent folder's ID should not be null.");
+
+        DocumentEntity childFile = DocumentEntity.builder()
+                .name("ChildFile_" + System.currentTimeMillis())
+                .title("Child File")
+                .content("This is a child file.")
+                .parent(savedParentFolder) // Set the parent folder
+                .type(DocumentEntity.Type.FILE) // Set as FILE
+                .build();
+
+        DocumentEntity savedChildFile = documentRepository.save(childFile);
+        assertNotNull(savedChildFile.getId(), "The child file's ID should not be null.");
+        assertEquals(savedParentFolder.getId(), savedChildFile.getParent().getId(), "The parent folder should match.");
+    }
+}
+
+
+
+
+//////
+
+
+Using generated security password: 829488b8-2f18-4d9b-a798-0c3b68f41b29
+
+curl -v -X POST http://localhost:8080/api/documents \
+-u user:c29315e2-a647-4f04-9cac-396a1c89e037 \
+-H "Content-Type: application/json" \
+-d '{
+  "name": "Test Document",
+  "title": "Sample Title",
+  "content": "This is the document content."
+}'
+
+
+
+
+
+    username: postgres                                    # Your database username
+    password: your_password
+
+
