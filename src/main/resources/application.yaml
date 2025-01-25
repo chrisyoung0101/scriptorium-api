@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/scriptorium_db?preferQueryMode=extended
-    username: postgres
-    password: your_actual_password
+    url: jdbc:postgresql://dpg-cu7bvg5svqrc7397mv50-a.singapore-postgres.render.com:5432/scriptorium_db
+    username: scriptorium_db_user
+    password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
   security:
     user:
@@ -13,12 +13,12 @@ spring:
       ddl-auto: update
     properties:
       hibernate:
-      # Commented out to avoid warnings with Hibernate 6+
-      # dialect: org.hibernate.dialect.PostgreSQLDialect
+        dialect: org.hibernate.dialect.PostgreSQLDialect
 
 server:
-  port: 8080
+  port: 8081
 
 logging:
   level:
     org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG

@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/documents")
@@ -113,39 +114,57 @@ public class DocumentController {
     @Operation(
             summary = "Rename a document or folder",
             description = """
-                Renames a specific document or folder by its unique ID. The new name must be unique 
-                at the same hierarchy level (e.g., no duplicate names in the same folder).
-                """,
+            Renames a specific document or folder by its unique ID. 
+            The new name must be unique at the same hierarchy level 
+            (e.g., no duplicate names in the same folder).
+            """,
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    required = true,
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(example = "{ \"name\": \"New Folder Name\" }")
+                    )
+            ),
             responses = {
                     @ApiResponse(responseCode = "200", description = "Document or folder renamed successfully.",
                             content = @Content(mediaType = "application/json", schema = @Schema(implementation = DocumentResponse.class)))
             }
     )
     public DocumentResponse renameDocument(
-            @PathVariable @Parameter(description = "The unique ID of the document or folder to rename.") Long id,
-            @RequestBody @Parameter(description = "The new name for the document or folder.") String newName) {
-        DocumentEntity updatedEntity = documentService.renameDocument(id, newName);
-        return DocumentResponse.fromEntity(updatedEntity);
+            @PathVariable Long id,
+            @RequestBody Map<String, String> requestBody
+    ) {
+        String newName = requestBody.get("name");
+        DocumentEntity updatedDocument = documentService.renameDocument(id, newName);
+        return DocumentResponse.fromEntity(updatedDocument);
     }
+
 
     @PutMapping("/{id}/move")
     @Operation(
             summary = "Move a document or folder to a new parent",
-            description = """
-                Moves a document or folder to a new parent folder. Specify the ID of the target folder as the `parentId` 
-                in the request body. If `parentId` is null, the document is moved to the root level.
-                """,
+            description = "Moves a document or folder to a new parent folder. If `parentId` is null, the document is moved to the root level.",
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "The new parent folder ID.",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(example = "{\"parentId\": 9}")
+                    )
+            ),
             responses = {
-                    @ApiResponse(responseCode = "200", description = "Document or folder moved successfully.",
-                            content = @Content(mediaType = "application/json", schema = @Schema(implementation = DocumentResponse.class)))
+                    @ApiResponse(responseCode = "200", description = "Document or folder moved successfully."),
+                    @ApiResponse(responseCode = "400", description = "Invalid request."),
+                    @ApiResponse(responseCode = "500", description = "Internal server error.")
             }
     )
-    public DocumentResponse moveDocument(
-            @PathVariable @Parameter(description = "The unique ID of the document or folder to move.") Long id,
-            @RequestBody @Parameter(description = "The ID of the new parent folder. Pass null for root-level.") Long newParentId) {
-        DocumentEntity movedEntity = documentService.moveDocument(id, newParentId);
-        return DocumentResponse.fromEntity(movedEntity);
+    public ResponseEntity<Void> moveDocument(
+            @PathVariable Long id,
+            @RequestBody Map<String, Long> requestBody) {
+        Long parentId = requestBody.get("parentId");
+        documentService.moveDocument(id, parentId);
+        return ResponseEntity.ok().build();
     }
+
 
     @DeleteMapping("/{id}")
     @Operation(

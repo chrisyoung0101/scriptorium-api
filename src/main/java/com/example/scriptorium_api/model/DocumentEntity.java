@@ -18,7 +18,7 @@ public class DocumentEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(unique = true, nullable = false) // Enforce uniqueness at the database level
     private String name;
 
     @Column(nullable = false)
