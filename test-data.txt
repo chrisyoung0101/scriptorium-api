@@ -1,0 +1,166 @@
+Here's a set of **test data** you can use to test all the endpoints in the Swagger UI for your **document-controller** API.
+
+---
+
+### **Test Data for API Endpoints**
+#### **1. Create a Document or Folder (POST `/api/documents`)**
+Request Body:
+```json
+{
+  "name": "Test Folder",
+  "type": "folder"
+}
+```
+Alternative:
+```json
+{
+  "name": "Test Document",
+  "type": "file",
+  "content": "This is a test document."
+}
+```
+
+---
+
+#### **2. Get All Documents and Folders (GET `/api/documents`)**
+- No body needed.
+- Test Expected Output:
+  - Status Code: 200
+  - Response Body:
+    ```json
+    [
+      {
+        "id": 1,
+        "name": "Test Folder",
+        "type": "folder"
+      },
+      {
+        "id": 2,
+        "name": "Test Document",
+        "type": "file",
+        "content": "This is a test document."
+      }
+    ]
+    ```
+
+---
+
+#### **3. Get a Document or Folder by ID (GET `/api/documents/{id}`)**
+- Replace `{id}` with `1` (for the folder) or `2` (for the document).
+- Test Expected Output:
+  - Status Code: 200
+  - Response Body for Folder:
+    ```json
+    {
+      "id": 1,
+      "name": "Test Folder",
+      "type": "folder"
+    }
+    ```
+  - Response Body for Document:
+    ```json
+    {
+      "id": 2,
+      "name": "Test Document",
+      "type": "file",
+      "content": "This is a test document."
+    }
+    ```
+
+---
+
+#### **4. Get Child Documents and Folders (GET `/api/documents/{parentId}/children`)**
+- Replace `{parentId}` with `1` (assuming this is the folder ID).
+- Test Expected Output:
+  - Status Code: 200
+  - Response Body:
+    ```json
+    [
+      {
+        "id": 3,
+        "name": "Sub Document",
+        "type": "file"
+      }
+    ]
+    ```
+
+---
+
+#### **5. Get All Root-Level Documents and Folders (GET `/api/documents/children`)**
+- No body needed.
+- Test Expected Output:
+  - Status Code: 200
+  - Response Body:
+    ```json
+    [
+      {
+        "id": 1,
+        "name": "Test Folder",
+        "type": "folder"
+      },
+      {
+        "id": 2,
+        "name": "Test Document",
+        "type": "file"
+      }
+    ]
+    ```
+
+---
+
+#### **6. Rename a Document or Folder (PUT `/api/documents/{id}/rename`)**
+Request Body:
+```json
+{
+  "newName": "Renamed Folder"
+}
+```
+- Replace `{id}` with `1` (for the folder) or `2` (for the document).
+- Test Expected Output:
+  - Status Code: 200
+  - Response Body:
+    ```json
+    {
+      "id": 1,
+      "name": "Renamed Folder",
+      "type": "folder"
+    }
+    ```
+
+---
+
+#### **7. Move a Document or Folder (PUT `/api/documents/{id}/move`)**
+Request Body:
+```json
+{
+  "newParentId": 1
+}
+```
+- Replace `{id}` with the ID of the document or folder to be moved.
+- Test Expected Output:
+  - Status Code: 200
+  - Response Body:
+    ```json
+    {
+      "id": 3,
+      "name": "Sub Document",
+      "type": "file",
+      "parentId": 1
+    }
+    ```
+
+---
+
+#### **8. Delete a Document or Folder (DELETE `/api/documents/{id}`)**
+- Replace `{id}` with `2` (for the document) or `1` (for the folder).
+- Test Expected Output:
+  - Status Code: 204 (No Content).
+
+---
+
+### **How to Use This Test Data**
+1. Open **Swagger UI** (as shown in your screenshot).
+2. Enter the provided **request bodies** and parameters in the relevant endpoints.
+3. Verify the **status codes** and responses against the expected outputs listed above.
+
+Would you like assistance automating this process further?
