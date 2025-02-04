@@ -16,7 +16,9 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
 server:
-  port: 8081
+  port: ${PORT:8080}  #This tells Spring Boot to use the PORT environment variable provided by Render. If the variable is not set (e.g., when running locally), it will fall back to port 8080.
+
+
 
 logging:
   level:
