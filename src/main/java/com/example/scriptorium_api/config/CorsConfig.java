@@ -14,13 +14,14 @@ public class CorsConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         CorsConfiguration config = new CorsConfiguration();
 
-        config.setAllowCredentials(true);
-        config.addAllowedOrigin("https://scriptorium-ui.netlify.app"); // Add your frontend URL
-        config.addAllowedHeader("*");
-        config.addAllowedMethod("*");
+        config.setAllowCredentials(true); // Allow cookies or authentication headers
+        config.addAllowedOrigin("https://scriptorium-ui.netlify.app"); // Frontend URL
+        config.addAllowedHeader("*"); // Allow all headers
+        config.addAllowedMethod("*"); // Allow all HTTP methods (GET, POST, etc.)
 
         source.registerCorsConfiguration("/**", config);
         return new CorsFilter(source);
     }
 }
+
 
