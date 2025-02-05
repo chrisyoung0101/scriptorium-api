@@ -1,10 +1,4 @@
 package com.example.scriptorium_api.config;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.web.SecurityFilterChain;
-
 
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
@@ -15,9 +9,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 
 import java.io.IOException;
+import java.util.Enumeration;
 
 @Configuration
 public class SecurityConfig {
@@ -55,20 +52,20 @@ public class SecurityConfig {
                 logger.info("Received preflight request: Method = {}, URI = {}, Headers = {}",
                         httpRequest.getMethod(),
                         httpRequest.getRequestURI(),
-                        httpRequest.getHeaderNames());
+                        extractHeaders(httpRequest));
             }
 
             chain.doFilter(request, response);
 
-            // Log the response for preflight
+            // Ensure Vary: Origin is not duplicated
             if ("OPTIONS".equalsIgnoreCase(httpRequest.getMethod())) {
+                preventDuplicateVaryHeader(httpResponse);
                 logger.info("Responded to preflight request: Status = {}, Headers = {}",
                         httpResponse.getStatus(),
-                        httpResponse.getHeaderNames());
+                        extractHeaders(httpResponse));
             }
         };
     }
-
 
     @Bean
     public Filter logAllRequestsFilter() {
@@ -77,14 +74,46 @@ public class SecurityConfig {
             logger.debug("Received request: Method = {}, URI = {}, Headers = {}",
                     httpRequest.getMethod(),
                     httpRequest.getRequestURI(),
-                    httpRequest.getHeaderNames());
+                    extractHeaders(httpRequest));
 
             chain.doFilter(request, response);
         };
     }
 
+    private void preventDuplicateVaryHeader(HttpServletResponse response) {
+        String varyHeader = response.getHeader("Vary");
+        if (varyHeader == null || !varyHeader.contains("Origin")) {
+            response.setHeader("Vary", "Origin");
+        }
+    }
 
+    private String extractHeaders(HttpServletRequest request) {
+        StringBuilder headers = new StringBuilder();
+        Enumeration<String> headerNames = request.getHeaderNames();
+        while (headerNames.hasMoreElements()) {
+            String headerName = headerNames.nextElement();
+            headers.append(headerName)
+                    .append(": ")
+                    .append(request.getHeader(headerName))
+                    .append(", ");
+        }
+        if (headers.length() > 0) {
+            headers.setLength(headers.length() - 2); // Remove trailing comma and space
+        }
+        return headers.toString();
+    }
 
-
+    private String extractHeaders(HttpServletResponse response) {
+        StringBuilder headers = new StringBuilder();
+        for (String headerName : response.getHeaderNames()) {
+            headers.append(headerName)
+                    .append(": ")
+                    .append(response.getHeader(headerName))
+                    .append(", ");
+        }
+        if (headers.length() > 0) {
+            headers.setLength(headers.length() - 2); // Remove trailing comma and space
+        }
+        return headers.toString();
+    }
 }
-
