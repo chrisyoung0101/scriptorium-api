@@ -1,8 +1,6 @@
 package com.example.scriptorium_api.config;
 
 import jakarta.servlet.Filter;
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
@@ -13,7 +11,6 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 
-import java.io.IOException;
 import java.util.Enumeration;
 
 @Configuration
@@ -24,22 +21,22 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
-                .csrf(csrf -> csrf.disable())
+                .csrf(csrf -> csrf.disable()) // Disable CSRF (important for CORS)
                 .cors(cors -> cors.configurationSource(request -> {
                     var corsConfig = new org.springframework.web.cors.CorsConfiguration();
-                    corsConfig.addAllowedOrigin("https://scriptorium-ui.netlify.app");
-                    corsConfig.addAllowedMethod("*");
-                    corsConfig.addAllowedHeader("*");
+                    corsConfig.addAllowedOrigin("https://scriptorium-ui.netlify.app"); // ✅ Allow frontend
+                    corsConfig.addAllowedMethod("*"); // ✅ Allow all HTTP methods
+                    corsConfig.addAllowedHeader("*"); // ✅ Allow all headers
                     corsConfig.setAllowCredentials(true);
                     return corsConfig;
                 }))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .anyRequest().authenticated()
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()  // ✅ Allow all OPTIONS preflight requests
+                        .anyRequest().authenticated()  // Other requests require authentication
                 )
-                .addFilterBefore(logOptionsFilter(), org.springframework.web.filter.CorsFilter.class)
                 .build();
     }
+
 
     @Bean
     public Filter logOptionsFilter() {
