@@ -14,17 +14,16 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable()) // Disable CSRF for simplicity
                 .cors(cors -> cors.configurationSource(request -> {
                     var corsConfig = new org.springframework.web.cors.CorsConfiguration();
-                    corsConfig.addAllowedOrigin("https://scriptorium-ui.netlify.app"); // Allow specific origin
-                    corsConfig.addAllowedMethod("*"); // Allow all methods (GET, POST, etc.)
+                    corsConfig.addAllowedOrigin("https://scriptorium-ui.netlify.app"); // Allow frontend origin
+                    corsConfig.addAllowedMethod("*"); // Allow all HTTP methods
                     corsConfig.addAllowedHeader("*"); // Allow all headers
-                    corsConfig.setAllowCredentials(true); // Allow credentials
+                    corsConfig.setAllowCredentials(true); // Allow credentials (cookies, authorization headers, etc.)
                     return corsConfig;
                 }))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/**").permitAll() // Allow API access
-                        .anyRequest().authenticated() // Restrict all other endpoints
+                        .requestMatchers("/api/**").permitAll() // Allow access to API endpoints
+                        .anyRequest().authenticated() // Restrict other endpoints
                 )
-                .httpBasic(httpBasic -> httpBasic.disable()) // Disable basic authentication
                 .build();
     }
 }
