@@ -23,14 +23,15 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, CorsFilter corsFilter) throws Exception {
         return http
-                .csrf(csrf -> csrf.disable()) // Disable CSRF
-                .addFilterBefore(corsFilter, UsernamePasswordAuthenticationFilter.class) // ✅ Ensure CORS filter runs before authentication
+                .csrf(csrf -> csrf.disable()) // Disable CSRF protection
+                .addFilterBefore(corsFilter, UsernamePasswordAuthenticationFilter.class) // Ensure CORS filter runs before authentication
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()  // ✅ Allow all OPTIONS requests explicitly
-                        .anyRequest().authenticated()  // Secure other requests
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()  // ✅ Explicitly allow all OPTIONS (CORS preflight) requests
+                        .anyRequest().authenticated()  // 🔒 Secure all other requests
                 )
                 .build();
     }
+
 
     @Bean
     public Filter logOptionsFilter() {

@@ -1,5 +1,10 @@
 spring:
   datasource:
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 2
+      idle-timeout: 10000
+      max-lifetime: 30000
     url: jdbc:postgresql://dpg-cu7bvg5svqrc7397mv50-a.singapore-postgres.render.com:5432/scriptorium_db
     username: scriptorium_db_user
     password: ${DB_PASSWORD}
