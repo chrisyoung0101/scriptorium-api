@@ -10,6 +10,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.filter.CorsFilter;
 
 import java.util.Enumeration;
 
@@ -19,12 +21,13 @@ public class SecurityConfig {
     private static final Logger logger = LoggerFactory.getLogger(SecurityConfig.class);
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, CorsFilter corsFilter) throws Exception {
         return http
                 .csrf(csrf -> csrf.disable()) // Disable CSRF
+                .addFilterBefore(corsFilter, UsernamePasswordAuthenticationFilter.class) // ✅ CORS filter runs before authentication
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()  // ✅ Allow all OPTIONS requests
-                        .anyRequest().authenticated()  // All other requests need authentication
+                        .anyRequest().authenticated()  // Secure other requests
                 )
                 .build();
     }
