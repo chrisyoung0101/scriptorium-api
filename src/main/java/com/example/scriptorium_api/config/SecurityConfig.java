@@ -21,10 +21,10 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
-                .csrf(csrf -> csrf.disable()) // Disable CSRF (important for CORS)
+                .csrf(csrf -> csrf.disable()) // Disable CSRF
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()  // ✅ Allow OPTIONS preflight requests
-                        .anyRequest().authenticated()  // Other requests require authentication
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()  // ✅ Allow all OPTIONS requests
+                        .anyRequest().authenticated()  // All other requests need authentication
                 )
                 .build();
     }
@@ -35,9 +35,8 @@ public class SecurityConfig {
             HttpServletRequest httpRequest = (HttpServletRequest) request;
             HttpServletResponse httpResponse = (HttpServletResponse) response;
 
-            // Log preflight request details
             if ("OPTIONS".equalsIgnoreCase(httpRequest.getMethod())) {
-                logger.info("🟡 Preflight Request Received: Method = {}, URI = {}, Headers = {}",
+                logger.info("🟡 Preflight Request Received → Method: {}, URI: {}, Headers: {}",
                         httpRequest.getMethod(),
                         httpRequest.getRequestURI(),
                         extractHeaders(httpRequest));
@@ -45,34 +44,12 @@ public class SecurityConfig {
 
             chain.doFilter(request, response);
 
-            // Ensure Vary: Origin is not duplicated
             if ("OPTIONS".equalsIgnoreCase(httpRequest.getMethod())) {
-                preventDuplicateVaryHeader(httpResponse);
-                logger.info("🟢 Preflight Response Sent: Status = {}, Headers = {}",
+                logger.info("🟢 Preflight Response Sent → Status: {}, Headers: {}",
                         httpResponse.getStatus(),
                         extractHeaders(httpResponse));
             }
         };
-    }
-
-    @Bean
-    public Filter logAllRequestsFilter() {
-        return (request, response, chain) -> {
-            HttpServletRequest httpRequest = (HttpServletRequest) request;
-            logger.debug("Received request: Method = {}, URI = {}, Headers = {}",
-                    httpRequest.getMethod(),
-                    httpRequest.getRequestURI(),
-                    extractHeaders(httpRequest));
-
-            chain.doFilter(request, response);
-        };
-    }
-
-    private void preventDuplicateVaryHeader(HttpServletResponse response) {
-        String varyHeader = response.getHeader("Vary");
-        if (varyHeader == null || !varyHeader.contains("Origin")) {
-            response.setHeader("Vary", "Origin");
-        }
     }
 
     private String extractHeaders(HttpServletRequest request) {
@@ -86,7 +63,7 @@ public class SecurityConfig {
                     .append(", ");
         }
         if (headers.length() > 0) {
-            headers.setLength(headers.length() - 2); // Remove trailing comma and space
+            headers.setLength(headers.length() - 2);
         }
         return headers.toString();
     }
@@ -100,7 +77,7 @@ public class SecurityConfig {
                     .append(", ");
         }
         if (headers.length() > 0) {
-            headers.setLength(headers.length() - 2); // Remove trailing comma and space
+            headers.setLength(headers.length() - 2);
         }
         return headers.toString();
     }
