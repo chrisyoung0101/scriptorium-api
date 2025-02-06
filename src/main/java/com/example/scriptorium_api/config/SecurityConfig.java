@@ -11,6 +11,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
 import java.util.Enumeration;
@@ -24,9 +25,9 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http, CorsFilter corsFilter) throws Exception {
         return http
                 .csrf(csrf -> csrf.disable()) // Disable CSRF
-                .addFilterBefore(corsFilter, UsernamePasswordAuthenticationFilter.class) // ✅ CORS filter runs before authentication
+                .addFilterBefore(corsFilter, UsernamePasswordAuthenticationFilter.class) // ✅ Ensure CORS filter runs before authentication
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()  // ✅ Allow all OPTIONS requests
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()  // ✅ Allow all OPTIONS requests explicitly
                         .anyRequest().authenticated()  // Secure other requests
                 )
                 .build();
