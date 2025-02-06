@@ -17,7 +17,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/documents")
-//@CrossOrigin(origins = "https://scriptorium-ui.netlify.app", allowedHeaders = "*", allowCredentials = "true")
+@CrossOrigin(origins = "https://scriptorium-ui.netlify.app", allowedHeaders = "*", allowCredentials = "true")
 public class DocumentController {
 
     @Autowired
