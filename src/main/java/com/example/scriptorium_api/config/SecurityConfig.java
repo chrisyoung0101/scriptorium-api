@@ -22,21 +22,12 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
                 .csrf(csrf -> csrf.disable()) // Disable CSRF (important for CORS)
-                .cors(cors -> cors.configurationSource(request -> {
-                    var corsConfig = new org.springframework.web.cors.CorsConfiguration();
-                    corsConfig.addAllowedOrigin("https://scriptorium-ui.netlify.app"); // ✅ Allow frontend
-                    corsConfig.addAllowedMethod("*"); // ✅ Allow all HTTP methods
-                    corsConfig.addAllowedHeader("*"); // ✅ Allow all headers
-                    corsConfig.setAllowCredentials(true);
-                    return corsConfig;
-                }))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()  // ✅ Allow all OPTIONS preflight requests
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()  // ✅ Allow OPTIONS preflight requests
                         .anyRequest().authenticated()  // Other requests require authentication
                 )
                 .build();
     }
-
 
     @Bean
     public Filter logOptionsFilter() {
@@ -46,7 +37,7 @@ public class SecurityConfig {
 
             // Log preflight request details
             if ("OPTIONS".equalsIgnoreCase(httpRequest.getMethod())) {
-                logger.info("Received preflight request: Method = {}, URI = {}, Headers = {}",
+                logger.info("🟡 Preflight Request Received: Method = {}, URI = {}, Headers = {}",
                         httpRequest.getMethod(),
                         httpRequest.getRequestURI(),
                         extractHeaders(httpRequest));
@@ -57,7 +48,7 @@ public class SecurityConfig {
             // Ensure Vary: Origin is not duplicated
             if ("OPTIONS".equalsIgnoreCase(httpRequest.getMethod())) {
                 preventDuplicateVaryHeader(httpResponse);
-                logger.info("Responded to preflight request: Status = {}, Headers = {}",
+                logger.info("🟢 Preflight Response Sent: Status = {}, Headers = {}",
                         httpResponse.getStatus(),
                         extractHeaders(httpResponse));
             }
