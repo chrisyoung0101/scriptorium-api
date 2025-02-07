@@ -16,16 +16,16 @@ public class CorsConfig {
     private static final Logger logger = LoggerFactory.getLogger(CorsConfig.class);
 
     @Bean
-    @Order(Ordered.HIGHEST_PRECEDENCE) // ✅ Forces CorsFilter to run before Spring Security
+    @Order(Ordered.HIGHEST_PRECEDENCE) // ✅ Ensure this runs before Spring Security
     public CorsFilter corsFilter() {
         logger.info("✅ CorsFilter initialized!"); // Log when the filter starts
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         CorsConfiguration config = new CorsConfiguration();
         config.addAllowedOrigin("https://scriptorium-ui.netlify.app"); // ✅ Allow frontend
-        config.addAllowedMethod("*");  // ✅ Allow all methods
+        config.addAllowedMethod("*");  // ✅ Allow all methods (GET, POST, PUT, DELETE, OPTIONS, etc.)
         config.addAllowedHeader("*");  // ✅ Allow all headers
-        config.setAllowCredentials(true);  // ✅ Required for cookies
+        config.setAllowCredentials(true);  // ✅ Required for cookies & authentication headers
 
         source.registerCorsConfiguration("/**", config);
         return new CorsFilter(source);
