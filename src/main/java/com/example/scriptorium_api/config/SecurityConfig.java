@@ -3,7 +3,10 @@ package com.example.scriptorium_api.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -19,17 +22,18 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        return http
-                .csrf(csrf -> csrf.disable()) // Disable CSRF for APIs
+        http
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // ✅ Allow OPTIONS
-                        .requestMatchers("/actuator/health").permitAll() // ✅ Allow public health check
-                        .requestMatchers(HttpMethod.GET, "/api/documents").authenticated() // 🔒 Require authentication
-                        .anyRequest().authenticated() // 🔒 Require authentication for other endpoints
+                        .requestMatchers("/api/documents").authenticated()  // Require authentication
+                        .anyRequest().permitAll()  // Everything else is accessible
                 )
-                .httpBasic(withDefaults()) // ✅ Enable basic authentication
-                .build();
+                .httpBasic(Customizer.withDefaults()) // Enables Basic Auth
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Disable session
+                .csrf(AbstractHttpConfigurer::disable); // Optional for APIs
+
+        return http.build();
     }
+
 
 
 
