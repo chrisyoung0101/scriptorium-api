@@ -12,23 +12,26 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.filter.CorsFilter;
 
+import static org.springframework.security.config.Customizer.withDefaults;
+
 @Configuration
 public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, CorsFilter corsFilter) throws Exception {
         return http
-                .csrf(csrf -> csrf.disable()) // ✅ Disable CSRF (good for APIs)
-                .addFilterBefore(corsFilter, UsernamePasswordAuthenticationFilter.class) // ✅ Ensure CORS filter runs first
+                .csrf(csrf -> csrf.disable()) // Disable CSRF for APIs
+                .addFilterBefore(corsFilter, UsernamePasswordAuthenticationFilter.class) // Ensure CORS runs before authentication
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()  // ✅ Allow all OPTIONS requests (CORS preflight)
-                        .requestMatchers("/actuator/health").permitAll()  // ✅ Allow health checks without auth
-                        .requestMatchers("/api/public/**").permitAll()  // ✅ Allow public API endpoints
-                        .anyRequest().authenticated()  // 🔒 Require authentication for all other requests
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // ✅ Allow OPTIONS requests
+                        .requestMatchers("/actuator/health").permitAll() // ✅ Allow public health check
+                        .requestMatchers("/api/documents").authenticated() // 🔒 Require authentication for /api/documents
+                        .anyRequest().authenticated() // 🔒 Require authentication for all other requests
                 )
-                .httpBasic(httpBasic -> httpBasic.disable()) // 🔒 Disabling HTTP Basic (use JWT or Session)
+                .httpBasic(withDefaults()) // ✅ Enable basic auth for easy testing
                 .build();
     }
+
 
     @Bean
     public UserDetailsService userDetailsService() {
