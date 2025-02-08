@@ -18,19 +18,19 @@ import static org.springframework.security.config.Customizer.withDefaults;
 public class SecurityConfig {
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, CorsFilter corsFilter) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
                 .csrf(csrf -> csrf.disable()) // Disable CSRF for APIs
-                .addFilterBefore(corsFilter, UsernamePasswordAuthenticationFilter.class) // Ensure CORS runs before authentication
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // ✅ Allow OPTIONS requests
                         .requestMatchers("/actuator/health").permitAll() // ✅ Allow public health check
-                        .requestMatchers("/api/documents").authenticated() // 🔒 Require authentication for /api/documents
-                        .anyRequest().authenticated() // 🔒 Require authentication for all other requests
+                        .requestMatchers(HttpMethod.GET, "/api/documents").authenticated() // 🔒 Require authentication
+                        .anyRequest().authenticated() // 🔒 Require authentication for all other endpoints
                 )
-                .httpBasic(withDefaults()) // ✅ Enable basic auth for easy testing
+                .httpBasic(withDefaults()) // ✅ Enable basic authentication
                 .build();
     }
+
 
 
     @Bean
