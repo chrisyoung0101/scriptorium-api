@@ -26,19 +26,20 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // Disable CSRF for APIs
+                // Disable CSRF as it isn't needed for stateless REST APIs
                 .csrf(csrf -> csrf.disable())
-                // Enable CORS using the configuration defined in corsConfigurationSource()
+                // Enable CORS using our custom configuration below
                 .cors(withDefaults())
-                // Use stateless sessions as we don't store session data on the server
+                // Set the session management to stateless (no HTTP sessions)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                // Define authorization rules
                 .authorizeHttpRequests(auth -> auth
-                        // Allow all OPTIONS requests for preflight checks
+                        // Allow all OPTIONS requests (preflight requests) for any endpoint
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        // Permit actuator endpoints so health checks, etc., can be accessed without auth
+                        .requestMatchers("/actuator/**").permitAll()
                         // Require authentication for /api/** endpoints
                         .requestMatchers("/api/**").authenticated()
-                        // Allow all other requests
+                        // Allow any other requests (e.g., public endpoints)
                         .anyRequest().permitAll()
                 )
                 // Enable HTTP Basic Authentication
@@ -65,19 +66,19 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // Allow only the Netlify frontend origin
+        // Allow only your Netlify frontend origin
         configuration.setAllowedOrigins(List.of("https://scriptorium-ui.netlify.app"));
-        // Allow the specified HTTP methods
+        // Allow HTTP methods needed by your frontend, including OPTIONS for preflight checks
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        // Allow specific headers in requests
+        // Allow the necessary headers (e.g., for Basic Auth and content type)
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
-        // Expose the Authorization header in responses
+        // Expose headers that the client might need to access
         configuration.setExposedHeaders(List.of("Authorization"));
-        // Allow credentials such as cookies or authentication headers
+        // Allow credentials to be included (cookies, auth headers, etc.)
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        // Apply CORS settings globally
+        // Apply this CORS configuration for all endpoints
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
