@@ -19,16 +19,17 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(AbstractHttpConfigurer::disable) // Disable CSRF for API calls
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // No sessions
+                .csrf(AbstractHttpConfigurer::disable)  // Disable CSRF for API calls
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))  // No sessions
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/documents").authenticated() // Require authentication for this endpoint
-                        .anyRequest().permitAll() // Allow all other endpoints
+                        .requestMatchers("/api/documents").authenticated()  // Require authentication for this endpoint
+                        .anyRequest().denyAll()  // Deny all other requests unless explicitly permitted
                 )
-                .httpBasic(withDefaults()); // Enforce Basic Authentication
+                .httpBasic(withDefaults());  // Enable Basic Authentication
 
         return http.build();
     }
+
 
     @Bean
     public UserDetailsService userDetailsService() {
