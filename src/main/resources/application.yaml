@@ -25,9 +25,16 @@ server:
 
 
 
+#logging:
+#  file:
+#    name: logs/application.log
+#  level:
+#    com.example.scriptorium_api.config.SecurityConfig: INFO
+
 logging:
-  file:
-    name: logs/application.log
   level:
-    com.example.scriptorium_api.config.SecurityConfig: INFO
+    org:
+      springframework:
+        security: DEBUG
+
 

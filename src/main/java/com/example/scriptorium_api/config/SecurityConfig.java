@@ -22,14 +22,15 @@ public class SecurityConfig {
         return http
                 .csrf(csrf -> csrf.disable()) // Disable CSRF for APIs
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // ✅ Allow OPTIONS requests
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // ✅ Allow OPTIONS
                         .requestMatchers("/actuator/health").permitAll() // ✅ Allow public health check
                         .requestMatchers(HttpMethod.GET, "/api/documents").authenticated() // 🔒 Require authentication
-                        .anyRequest().authenticated() // 🔒 Require authentication for all other endpoints
+                        .anyRequest().authenticated() // 🔒 Require authentication for other endpoints
                 )
                 .httpBasic(withDefaults()) // ✅ Enable basic authentication
                 .build();
     }
+
 
 
 
