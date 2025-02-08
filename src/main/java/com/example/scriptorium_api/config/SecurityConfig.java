@@ -28,11 +28,10 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable) // Disable CSRF for APIs
                 .cors(withDefaults()) // Enable CORS with custom configuration
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Stateless sessions
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Stateless session
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/**").authenticated() // Require authentication for API endpoints
-                        .requestMatchers("/actuator/**").permitAll() // Allow Actuator endpoints
-                        .anyRequest().denyAll() // Deny all other requests
+                        .requestMatchers("/api/**").authenticated() // Secure API endpoints
+                        .anyRequest().permitAll() // Permit other requests (e.g., OPTIONS for CORS)
                 )
                 .httpBasic(withDefaults()); // Enable Basic Authentication
 
@@ -42,7 +41,7 @@ public class SecurityConfig {
     @Bean
     public UserDetailsService userDetailsService(PasswordEncoder passwordEncoder) {
         UserDetails admin = User.withUsername("admin")
-                .password(passwordEncoder.encode("admin123")) // Secure password storage
+                .password(passwordEncoder.encode("admin123")) // Secure password
                 .roles("USER")
                 .build();
 
@@ -58,10 +57,10 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of("https://scriptorium-ui.netlify.app")); // Allow Netlify frontend
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS")); // Allow these methods
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS")); // Allow HTTP methods
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type")); // Allow headers
-        configuration.setExposedHeaders(List.of("Authorization")); // Expose headers if needed
-        configuration.setAllowCredentials(true); // Allow credentials (e.g., cookies or Authorization header)
+        configuration.setExposedHeaders(List.of("Authorization")); // Expose Authorization header
+        configuration.setAllowCredentials(true); // Allow cookies/authorization headers
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration); // Apply CORS settings to all endpoints
