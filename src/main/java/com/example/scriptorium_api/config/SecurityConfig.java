@@ -2,14 +2,15 @@ package com.example.scriptorium_api.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -25,14 +26,23 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable()) // Disable CSRF for APIs
-                .cors(withDefaults()) // Enable CORS using the below configuration
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Stateless session
+                // Disable CSRF for APIs
+                .csrf(csrf -> csrf.disable())
+                // Enable CORS using the configuration defined in corsConfigurationSource()
+                .cors(withDefaults())
+                // Use stateless sessions as we don't store session data on the server
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                // Define authorization rules
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/**").authenticated() // Secure API endpoints
-                        .anyRequest().permitAll() // Allow other requests (e.g., preflight OPTIONS)
+                        // Allow all OPTIONS requests for preflight checks
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        // Require authentication for /api/** endpoints
+                        .requestMatchers("/api/**").authenticated()
+                        // Allow all other requests
+                        .anyRequest().permitAll()
                 )
-                .httpBasic(withDefaults()); // Enable Basic Authentication
+                // Enable HTTP Basic Authentication
+                .httpBasic(withDefaults());
 
         return http.build();
     }
@@ -40,7 +50,7 @@ public class SecurityConfig {
     @Bean
     public UserDetailsService userDetailsService(PasswordEncoder passwordEncoder) {
         UserDetails admin = User.withUsername("admin")
-                .password(passwordEncoder.encode("admin123")) // Secure password
+                .password(passwordEncoder.encode("admin123"))
                 .roles("USER")
                 .build();
 
@@ -49,20 +59,26 @@ public class SecurityConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder(); // Strong password hashing
+        return new BCryptPasswordEncoder();
     }
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("https://scriptorium-ui.netlify.app")); // Allow only the Netlify frontend
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS")); // Allow these methods
-        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type")); // Allow these headers
-        configuration.setExposedHeaders(List.of("Authorization")); // Expose these headers
-        configuration.setAllowCredentials(true); // Allow cookies and credentials
+        // Allow only the Netlify frontend origin
+        configuration.setAllowedOrigins(List.of("https://scriptorium-ui.netlify.app"));
+        // Allow the specified HTTP methods
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        // Allow specific headers in requests
+        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+        // Expose the Authorization header in responses
+        configuration.setExposedHeaders(List.of("Authorization"));
+        // Allow credentials such as cookies or authentication headers
+        configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration); // Apply CORS settings globally
+        // Apply CORS settings globally
+        source.registerCorsConfiguration("/**", configuration);
         return source;
     }
 }
