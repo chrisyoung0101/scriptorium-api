@@ -26,23 +26,23 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // Disable CSRF as it isn't needed for stateless REST APIs
+                // Disable CSRF protection as it's not needed for stateless REST APIs
                 .csrf(csrf -> csrf.disable())
-                // Enable CORS using our custom configuration below
+                // Enable CORS using the custom configuration defined below
                 .cors(withDefaults())
-                // Set the session management to stateless (no HTTP sessions)
+                // Set session management to stateless
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // Allow all OPTIONS requests (preflight requests) for any endpoint
+                        // Allow all OPTIONS (preflight) requests without authentication
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        // Permit actuator endpoints so health checks, etc., can be accessed without auth
+                        // Allow actuator endpoints without authentication
                         .requestMatchers("/actuator/**").permitAll()
                         // Require authentication for /api/** endpoints
                         .requestMatchers("/api/**").authenticated()
-                        // Allow any other requests (e.g., public endpoints)
+                        // Allow all other requests (e.g., public resources)
                         .anyRequest().permitAll()
                 )
-                // Enable HTTP Basic Authentication
+                // Enable HTTP Basic authentication
                 .httpBasic(withDefaults());
 
         return http.build();
@@ -50,6 +50,7 @@ public class SecurityConfig {
 
     @Bean
     public UserDetailsService userDetailsService(PasswordEncoder passwordEncoder) {
+        // Create an in-memory user with username "admin" and password "admin123"
         UserDetails admin = User.withUsername("admin")
                 .password(passwordEncoder.encode("admin123"))
                 .roles("USER")
@@ -60,25 +61,29 @@ public class SecurityConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
+        // Use BCrypt for password encoding
         return new BCryptPasswordEncoder();
     }
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // Allow only your Netlify frontend origin
-        configuration.setAllowedOrigins(List.of("https://scriptorium-ui.netlify.app"));
-        // Allow HTTP methods needed by your frontend, including OPTIONS for preflight checks
+        // Using allowedOriginPatterns to be flexible with the exact format of the Origin header
+        configuration.setAllowedOriginPatterns(List.of("https://scriptorium-ui.netlify.app"));
+        // Alternatively, if you know the exact format, you can use:
+        // configuration.setAllowedOrigins(List.of("https://scriptorium-ui.netlify.app"));
+
+        // Allow all headers (this will let any header be sent in the preflight request)
+        configuration.setAllowedHeaders(List.of("*"));
+        // Allow the necessary HTTP methods including OPTIONS for preflight
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        // Allow the necessary headers (e.g., for Basic Auth and content type)
-        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
-        // Expose headers that the client might need to access
+        // Expose headers that might be useful to the client
         configuration.setExposedHeaders(List.of("Authorization"));
-        // Allow credentials to be included (cookies, auth headers, etc.)
+        // Allow credentials (cookies, auth headers, etc.)
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        // Apply this CORS configuration for all endpoints
+        // Apply the configuration for all endpoints
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
