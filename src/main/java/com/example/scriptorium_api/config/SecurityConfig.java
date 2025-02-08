@@ -8,6 +8,8 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 
@@ -19,24 +21,29 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(AbstractHttpConfigurer::disable)  // Disable CSRF for API calls
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))  // No sessions
+                .csrf(AbstractHttpConfigurer::disable) // Disable CSRF for APIs
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Stateless session
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/documents").authenticated()  // Require authentication for this endpoint
-                        .anyRequest().denyAll()  // Deny all other requests unless explicitly permitted
+                        .requestMatchers("/api/documents").authenticated() // Require authentication for this endpoint
+                        .anyRequest().denyAll() // Deny all other requests
                 )
-                .httpBasic(withDefaults());  // Enable Basic Authentication
+                .httpBasic(withDefaults()); // Enable Basic Authentication
 
         return http.build();
     }
 
-
     @Bean
-    public UserDetailsService userDetailsService() {
+    public UserDetailsService userDetailsService(PasswordEncoder passwordEncoder) {
         UserDetails admin = User.withUsername("admin")
-                .password("{noop}admin123") // 🔴 Plaintext password for testing, replace in production!
+                .password(passwordEncoder.encode("admin123")) // 🔒 Secure password storage
                 .roles("USER")
                 .build();
+
         return new InMemoryUserDetailsManager(admin);
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder(); // Strong password hashing
     }
 }
