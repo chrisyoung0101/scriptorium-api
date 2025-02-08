@@ -12,10 +12,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.filter.CorsFilter;
-
-import static org.springframework.security.config.Customizer.withDefaults;
 
 @Configuration
 public class SecurityConfig {
@@ -24,25 +20,21 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/documents").authenticated()  // Require authentication
-                        .anyRequest().permitAll()  // Everything else is accessible
+                        .requestMatchers("/api/documents").authenticated()  // Require authentication for this route
+                        .anyRequest().authenticated()  // 🔹 Enforce authentication for all routes
                 )
-                .httpBasic(Customizer.withDefaults()) // Enables Basic Auth
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Disable session
-                .csrf(AbstractHttpConfigurer::disable); // Optional for APIs
+                .httpBasic(Customizer.withDefaults()) // Enables Basic Authentication
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Stateless API
+                .csrf(AbstractHttpConfigurer::disable); // 🔹 Disable CSRF for API requests
 
         return http.build();
     }
-
-
-
-
 
     @Bean
     public UserDetailsService userDetailsService() {
         UserDetails user = User.builder()
                 .username("admin")
-                .password("{noop}admin123") // 🔒 In-memory user for testing (replace with real auth)
+                .password("{noop}admin123") // 🔒 In-memory user for testing (use BCrypt in production)
                 .roles("USER")
                 .build();
         return new InMemoryUserDetailsManager(user);
