@@ -7,17 +7,16 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.core.userdetails.UserDetailsService;
 
-
-import java.util.Arrays;
+import java.util.List;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
@@ -28,10 +27,11 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable) // Disable CSRF for APIs
-                .cors(withDefaults()) // Enable CORS
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Stateless session
+                .cors(withDefaults()) // Enable CORS with custom configuration
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Stateless sessions
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/documents").authenticated() // Require authentication for this endpoint
+                        .requestMatchers("/api/**").authenticated() // Require authentication for API endpoints
+                        .requestMatchers("/actuator/**").permitAll() // Allow Actuator endpoints
                         .anyRequest().denyAll() // Deny all other requests
                 )
                 .httpBasic(withDefaults()); // Enable Basic Authentication
@@ -42,7 +42,7 @@ public class SecurityConfig {
     @Bean
     public UserDetailsService userDetailsService(PasswordEncoder passwordEncoder) {
         UserDetails admin = User.withUsername("admin")
-                .password(passwordEncoder.encode("admin123")) // 🔒 Secure password storage
+                .password(passwordEncoder.encode("admin123")) // Secure password storage
                 .roles("USER")
                 .build();
 
@@ -57,14 +57,14 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("https://scriptorium-ui.netlify.app")); // Allow Netlify app origin
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "DELETE", "PUT", "OPTIONS")); // Allow specific HTTP methods
-        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type")); // Allow headers required by your app
-        configuration.setExposedHeaders(Arrays.asList("Authorization")); // Expose specific headers to the client
-        configuration.setAllowCredentials(true); // Allow credentials for authentication
+        configuration.setAllowedOrigins(List.of("https://scriptorium-ui.netlify.app")); // Allow Netlify frontend
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS")); // Allow these methods
+        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type")); // Allow headers
+        configuration.setExposedHeaders(List.of("Authorization")); // Expose headers if needed
+        configuration.setAllowCredentials(true); // Allow credentials (e.g., cookies or Authorization header)
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
+        source.registerCorsConfiguration("/**", configuration); // Apply CORS settings to all endpoints
         return source;
     }
 }
