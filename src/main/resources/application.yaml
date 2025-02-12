@@ -9,10 +9,7 @@ spring:
     username: scriptorium_db_user
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
-  security:
-    user:
-      name: admin
-      password: admin123
+
   jpa:
     hibernate:
       ddl-auto: update
@@ -21,20 +18,4 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
 server:
-  port: ${PORT:8081}  #This tells Spring Boot to use the PORT environment variable provided by Render. If the variable is not set (e.g., when running locally), it will fall back to port 8080.
-
-
-
-#logging:
-#  file:
-#    name: logs/application.log
-#  level:
-#    com.example.scriptorium_api.config.SecurityConfig: INFO
-
-logging:
-  level:
-    org:
-      springframework:
-        security: DEBUG
-
-
+  port: ${PORT:8081}  # Default to 8081

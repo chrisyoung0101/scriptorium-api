@@ -13,13 +13,13 @@ public class CorsConfig {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**")
-                        .allowedOrigins(
-                                "https://scriptorium-ui.netlify.app"  // ✅ Allow only this domain in production
-                        )
+                        .allowedOrigins("https://scriptorium-ui.netlify.app")  // ✅ Allow only Netlify
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-                        .allowedHeaders("*");  // ✅ Allow all headers
+                        .allowedHeaders("*")
+                        .allowCredentials(false);  // ❌ Remove authentication
             }
         };
     }
 }
+
 
