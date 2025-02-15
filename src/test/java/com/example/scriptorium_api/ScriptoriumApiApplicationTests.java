@@ -1,27 +1,27 @@
 package com.example.scriptorium_api;
 
-import com.example.scriptorium_api.dto.DocumentResponse;
 import com.example.scriptorium_api.model.DocumentEntity;
 import com.example.scriptorium_api.repository.DocumentRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
 @ActiveProfiles("test") // Explicitly use 'test' profile
+@AutoConfigureMockMvc(addFilters = false) // Disable security filters
 public class ScriptoriumApiApplicationTests {
 
     @Autowired
@@ -30,14 +30,14 @@ public class ScriptoriumApiApplicationTests {
     @Autowired
     private WebApplicationContext webApplicationContext;
 
-    private MockMvc mockMvc;
-    private ObjectMapper objectMapper;
+    @Autowired
+    private MockMvc mockMvc;  // Injected by @AutoConfigureMockMvc
+
+    private ObjectMapper objectMapper = new ObjectMapper();
 
     @BeforeEach
     public void setUp() {
         documentRepository.deleteAll(); // Clean the database before each test
-        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
-        objectMapper = new ObjectMapper();
     }
 
     @Test
@@ -66,29 +66,27 @@ public class ScriptoriumApiApplicationTests {
                 .name(uniqueBaseName)
                 .title("First Document")
                 .content("Content of the first document")
-                .type(DocumentEntity.Type.FILE) // Explicitly set type
+                .type(DocumentEntity.Type.FILE)
                 .build();
 
-        documentRepository.save(firstDocument); // Save the first document
+        documentRepository.save(firstDocument);
 
         // Create and attempt to save the second document with the same name
         DocumentEntity secondDocument = DocumentEntity.builder()
-                .name(uniqueBaseName) // Same name
+                .name(uniqueBaseName)
                 .title("Second Document")
                 .content("Content of the second document")
-                .type(DocumentEntity.Type.FILE) // Explicitly set type
+                .type(DocumentEntity.Type.FILE)
                 .build();
 
-        // Assert that a DataIntegrityViolationException is thrown
         Exception exception = assertThrows(
                 org.springframework.dao.DataIntegrityViolationException.class,
-                () -> documentRepository.saveAndFlush(secondDocument), // Ensure flush is called to trigger the constraint
+                () -> documentRepository.saveAndFlush(secondDocument),
                 "Saving a document with a duplicate name should throw a DataIntegrityViolationException."
         );
 
         assertNotNull(exception, "Expected exception should not be null.");
     }
-
 
     @Test
     public void testControllerCreateAndFetchDocument() throws Exception {
