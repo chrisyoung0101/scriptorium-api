@@ -187,6 +187,11 @@ public class DocumentController {
         return ResponseEntity.noContent().build(); // HTTP 204 No Content
     }
 
+    @GetMapping("/hello")
+    public ResponseEntity<String> hello() {
+        return ResponseEntity.ok("Hello from Backend!");
+    }
+
 
 
 }
