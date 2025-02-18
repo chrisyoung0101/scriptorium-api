@@ -189,7 +189,7 @@ public class DocumentController {
 
     @GetMapping("/hello")
     public ResponseEntity<String> hello() {
-        return ResponseEntity.ok("Hello from Backend!");
+        return ResponseEntity.ok("Hello from Scriptorium Backend!");
     }
 
 
