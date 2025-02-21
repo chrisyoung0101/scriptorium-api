@@ -22,6 +22,13 @@ public class DocumentController {
     @Autowired
     private DocumentService documentService;
 
+    // ✅ Moved hello endpoint to the top to prevent path conflicts
+    @GetMapping("/hello")
+    public ResponseEntity<String> hello() {
+        return ResponseEntity.ok("Hello from Scriptorium Backend!");
+    }
+
+    // 📂 Create a new document or folder
     @PostMapping
     @Operation(
             summary = "Create a new document or folder",
@@ -40,6 +47,7 @@ public class DocumentController {
         return DocumentResponse.fromEntity(savedEntity);
     }
 
+    // 📋 Get all documents and folders
     @GetMapping
     @Operation(
             summary = "Get all documents and folders",
@@ -56,21 +64,27 @@ public class DocumentController {
                 .toList();
     }
 
-    @GetMapping("/{id}")
+    // 📁 Get all root-level documents and folders
+    @GetMapping("/children")
     @Operation(
-            summary = "Get a document or folder by ID",
-            description = "Retrieves a specific document or folder using its unique ID.",
+            summary = "Get all root-level documents and folders",
+            description = """
+                Fetches all documents and folders that are not nested under any parent (root-level). 
+                Useful for building the top-level of a file hierarchy.
+                """,
             responses = {
-                    @ApiResponse(responseCode = "200", description = "Document or folder retrieved successfully.",
+                    @ApiResponse(responseCode = "200", description = "List of root-level documents and folders retrieved successfully.",
                             content = @Content(mediaType = "application/json", schema = @Schema(implementation = DocumentResponse.class)))
             }
     )
-    public DocumentResponse getDocumentById(
-            @PathVariable @Parameter(description = "The unique ID of the document or folder to retrieve.") Long id) {
-        DocumentEntity entity = documentService.getDocumentById(id);
-        return DocumentResponse.fromEntity(entity);
+    public List<DocumentResponse> getChildren() {
+        return documentService.getChildrenByParentId(null)
+                .stream()
+                .map(DocumentResponse::fromEntity)
+                .toList();
     }
 
+    // 📁 Get child documents and folders by parent ID
     @GetMapping("/{parentId}/children")
     @Operation(
             summary = "Get child documents and folders by parent ID",
@@ -91,26 +105,24 @@ public class DocumentController {
                 .toList();
     }
 
-    @GetMapping("/children")
+    // 📄 Get a document or folder by ID (Only matches numeric IDs)
+    @GetMapping("/{id:\\d+}")
     @Operation(
-            summary = "Get all root-level documents and folders",
-            description = """
-                Fetches all documents and folders that are not nested under any parent (root-level). 
-                Useful for building the top-level of a file hierarchy.
-                """,
+            summary = "Get a document or folder by ID",
+            description = "Retrieves a specific document or folder using its unique ID.",
             responses = {
-                    @ApiResponse(responseCode = "200", description = "List of root-level documents and folders retrieved successfully.",
+                    @ApiResponse(responseCode = "200", description = "Document or folder retrieved successfully.",
                             content = @Content(mediaType = "application/json", schema = @Schema(implementation = DocumentResponse.class)))
             }
     )
-    public List<DocumentResponse> getChildren() {
-        return documentService.getChildrenByParentId(null)
-                .stream()
-                .map(DocumentResponse::fromEntity)
-                .toList();
+    public DocumentResponse getDocumentById(
+            @PathVariable @Parameter(description = "The unique ID of the document or folder to retrieve.") Long id) {
+        DocumentEntity entity = documentService.getDocumentById(id);
+        return DocumentResponse.fromEntity(entity);
     }
 
-    @PutMapping("/{id}/rename")
+    // ✏️ Rename a document or folder
+    @PutMapping("/{id:\\d+}/rename")
     @Operation(
             summary = "Rename a document or folder",
             description = """
@@ -139,8 +151,8 @@ public class DocumentController {
         return DocumentResponse.fromEntity(updatedDocument);
     }
 
-
-    @PutMapping("/{id}/move")
+    // 📂 Move a document or folder to a new parent
+    @PutMapping("/{id:\\d+}/move")
     @Operation(
             summary = "Move a document or folder to a new parent",
             description = "Moves a document or folder to a new parent folder. If `parentId` is null, the document is moved to the root level.",
@@ -165,8 +177,8 @@ public class DocumentController {
         return ResponseEntity.ok().build();
     }
 
-
-    @DeleteMapping("/{id}")
+    // 🗑 Delete a document or folder by ID
+    @DeleteMapping("/{id:\\d+}")
     @Operation(
             summary = "Delete a document or folder by ID",
             description = """
@@ -186,12 +198,4 @@ public class DocumentController {
         documentService.deleteDocumentById(id);
         return ResponseEntity.noContent().build(); // HTTP 204 No Content
     }
-
-    @GetMapping("/hello")
-    public ResponseEntity<String> hello() {
-        return ResponseEntity.ok("Hello from Scriptorium Backend!");
-    }
-
-
-
 }
