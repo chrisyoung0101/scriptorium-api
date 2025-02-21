@@ -13,11 +13,16 @@ public class CorsConfig {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**")
-                        .allowedOrigins("http://localhost:5173")  // Explicitly allow your frontend's origin
+                        .allowedOrigins(
+                                "http://localhost:5173",
+                                "http://localhost:5174",
+                                "https://your-netlify-site.netlify.app"
+                        )
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
                         .exposedHeaders("Authorization", "Content-Type")
-                        .allowCredentials(true);  // Allow cookies and credentials
+                        .allowCredentials(true)  // Only if you're using cookies/auth headers
+                        .maxAge(3600);  // Cache preflight response
             }
         };
     }
