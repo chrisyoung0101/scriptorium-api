@@ -13,16 +13,10 @@ public class CorsConfig {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**")
-                        .allowedOrigins(
-                                "http://localhost:5173",
-                                "http://localhost:5174",
-                                "https://your-netlify-site.netlify.app"
-                        )
+                        .allowedOrigins("http://localhost:5173") // Vite dev server
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
-                        .exposedHeaders("Authorization", "Content-Type")
-                        .allowCredentials(true)  // Only if you're using cookies/auth headers
-                        .maxAge(3600);  // Cache preflight response
+                        .allowCredentials(true);
             }
         };
     }

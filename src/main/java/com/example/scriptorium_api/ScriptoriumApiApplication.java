@@ -9,5 +9,4 @@ public class ScriptoriumApiApplication {
     public static void main(String[] args) {
         SpringApplication.run(ScriptoriumApiApplication.class, args);
     }
-
 }
