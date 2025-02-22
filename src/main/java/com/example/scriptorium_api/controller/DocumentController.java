@@ -1,4 +1,4 @@
-package com.example.scriptorium_api;
+package com.example.scriptorium_api.controller;
 
 import com.example.scriptorium_api.model.DocumentEntity;
 import com.example.scriptorium_api.service.DocumentService;
