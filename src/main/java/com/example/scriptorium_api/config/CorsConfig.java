@@ -19,8 +19,13 @@ public class CorsConfig {
                 "https://scriptorium-v2.netlify.app", // ✅ Netlify frontend
                 "http://localhost:5173"              // ✅ Local dev
         ));
-        config.setAllowedHeaders(Arrays.asList("*"));
-        config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(Arrays.asList(
+                "Origin", "Content-Type", "Accept", "Authorization", "X-Requested-With"
+        ));
+        config.setAllowedMethods(Arrays.asList(
+                "GET", "POST", "PUT", "DELETE", "OPTIONS"  // ✅ Include OPTIONS
+        ));
+        config.setExposedHeaders(Arrays.asList("Authorization"));
         config.setMaxAge(3600L); // Cache preflight response
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
