@@ -14,28 +14,28 @@ public class CorsConfig {
     @Bean
     public CorsFilter corsFilter() {
         CorsConfiguration config = new CorsConfiguration();
+
+        // Allow credentials (if needed)
         config.setAllowCredentials(true);
 
-        // ✅ Use wildcard OR specific origins, not both
-        config.addAllowedOriginPattern("*");  // Allow all origins temporarily for debugging
+        // Allow ALL origins temporarily for debugging
+        config.setAllowedOriginPatterns(Arrays.asList("*"));  // Using patterns to support wildcards
 
-        config.setAllowedHeaders(Arrays.asList(
-                "Origin", "Content-Type", "Accept", "Authorization", "X-Requested-With",
-                "Access-Control-Allow-Origin", "Access-Control-Allow-Headers", "Access-Control-Allow-Methods"
-        ));
+        // Allow ALL headers for testing
+        config.setAllowedHeaders(Arrays.asList("*"));
 
-        config.setAllowedMethods(Arrays.asList(
-                "GET", "POST", "PUT", "DELETE", "OPTIONS"  // ✅ Ensure OPTIONS is included
-        ));
+        // Allow standard HTTP methods
+        config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
 
-        config.setExposedHeaders(Arrays.asList(
-                "Authorization", "Location", "Content-Disposition"
-        ));
+        // Expose headers (if needed, e.g., for auth tokens)
+        config.setExposedHeaders(Arrays.asList("Authorization", "Content-Type"));
 
-        config.setMaxAge(3600L); // Cache preflight response
+        // Cache preflight response for 1 hour
+        config.setMaxAge(3600L);
 
+        // Apply configuration to all API routes
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/api/**", config);
+        source.registerCorsConfiguration("/**", config);
 
         return new CorsFilter(source);
     }
