@@ -29,7 +29,8 @@ public class CorsConfig {
         config.setMaxAge(3600L); // Cache preflight response
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", config);
+        source.registerCorsConfiguration("/api/**", config);
+
 
         return new CorsFilter(source);
     }
