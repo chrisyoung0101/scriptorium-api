@@ -28,6 +28,8 @@ public class CorsConfig {
         config.setExposedHeaders(Arrays.asList("Authorization"));
         config.setMaxAge(3600L); // Cache preflight response
 
+        config.addAllowedOriginPattern("*"); // Allow all origins temporarily
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/api/**", config);
 
