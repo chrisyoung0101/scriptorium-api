@@ -15,25 +15,32 @@ public class CorsConfig {
     public CorsFilter corsFilter() {
         CorsConfiguration config = new CorsConfiguration();
 
-        // Allow credentials (if needed)
+        // Allow credentials
         config.setAllowCredentials(true);
 
-        // Allow ALL origins temporarily for debugging
-        config.setAllowedOriginPatterns(Arrays.asList("*"));  // Using patterns to support wildcards
+        // Allow specific origins (for production) or use patterns for testing
+        config.setAllowedOrigins(Arrays.asList(
+                "https://scriptorium-v2.netlify.app",  // Netlify frontend
+                "http://localhost:5173"               // Local dev
+        ));
 
-        // Allow ALL headers for testing
-        config.setAllowedHeaders(Arrays.asList("*"));
+        // Allow essential headers
+        config.setAllowedHeaders(Arrays.asList(
+                "Origin", "Content-Type", "Accept", "Authorization",
+                "X-Requested-With", "Access-Control-Request-Method",
+                "Access-Control-Request-Headers"
+        ));
 
         // Allow standard HTTP methods
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
 
-        // Expose headers (if needed, e.g., for auth tokens)
-        config.setExposedHeaders(Arrays.asList("Authorization", "Content-Type"));
+        // Expose headers if needed
+        config.setExposedHeaders(Arrays.asList("Authorization", "Content-Type", "application/json"));
 
-        // Cache preflight response for 1 hour
+        // Cache preflight response
         config.setMaxAge(3600L);
 
-        // Apply configuration to all API routes
+        // Apply to all API routes
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
 
