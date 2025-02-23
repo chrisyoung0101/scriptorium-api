@@ -15,24 +15,27 @@ public class CorsConfig {
     public CorsFilter corsFilter() {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(true);
-        config.setAllowedOrigins(Arrays.asList(
-                "https://scriptorium-v2.netlify.app", // ✅ Netlify frontend
-                "http://localhost:5173"              // ✅ Local dev
-        ));
-        config.setAllowedHeaders(Arrays.asList(
-                "Origin", "Content-Type", "Accept", "Authorization", "X-Requested-With"
-        ));
-        config.setAllowedMethods(Arrays.asList(
-                "GET", "POST", "PUT", "DELETE", "OPTIONS"  // ✅ Include OPTIONS
-        ));
-        config.setExposedHeaders(Arrays.asList("Authorization"));
-        config.setMaxAge(3600L); // Cache preflight response
 
-        config.addAllowedOriginPattern("*"); // Allow all origins temporarily
+        // ✅ Use wildcard OR specific origins, not both
+        config.addAllowedOriginPattern("*");  // Allow all origins temporarily for debugging
+
+        config.setAllowedHeaders(Arrays.asList(
+                "Origin", "Content-Type", "Accept", "Authorization", "X-Requested-With",
+                "Access-Control-Allow-Origin", "Access-Control-Allow-Headers", "Access-Control-Allow-Methods"
+        ));
+
+        config.setAllowedMethods(Arrays.asList(
+                "GET", "POST", "PUT", "DELETE", "OPTIONS"  // ✅ Ensure OPTIONS is included
+        ));
+
+        config.setExposedHeaders(Arrays.asList(
+                "Authorization", "Location", "Content-Disposition"
+        ));
+
+        config.setMaxAge(3600L); // Cache preflight response
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/api/**", config);
-
 
         return new CorsFilter(source);
     }
