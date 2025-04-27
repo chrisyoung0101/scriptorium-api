@@ -10,8 +10,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequiredArgsConstructor
 @RequestMapping("/api/documents")
+@RequiredArgsConstructor
 public class DocumentController {
 
     private final DocumentService documentService;
@@ -29,9 +29,22 @@ public class DocumentController {
             DocumentEntity savedDocument = documentService.saveDocument(documentEntity);
             return new ResponseEntity<>(savedDocument, HttpStatus.CREATED); // 201 Created
         } catch (IllegalArgumentException ex) {
-            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST); // 400 Bad Request
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);       // 400 Bad Request
         } catch (Exception ex) {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR); // 500 Server Error
+        }
+    }
+
+    // ➤ DELETE a document by ID
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteDocument(@PathVariable Long id) {
+        try {
+            documentService.deleteDocumentById(id);
+            return ResponseEntity.noContent().build();                        // 204 No Content
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.notFound().build();                         // 404 Not Found
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build(); // 500 Server Error
         }
     }
 }
